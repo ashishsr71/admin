@@ -9,7 +9,17 @@ export async function GET(req: Request) {
     await connectToDatabase();
     // Assuming admin authorization would happen here
     const orders = await Order.find({}).sort({ createdAt: -1 });
-    return NextResponse.json(orders, { status: 200 });
+    
+    // Map _id and nested document to JSON explicitly to match frontend type
+    const formattedOrders = orders.map((o) => {
+      const doc = o.toObject ? o.toObject() : o;
+      return {
+        ...doc,
+        id: (doc._id || doc.id).toString(),
+      };
+    });
+
+    return NextResponse.json(formattedOrders, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch orders" },

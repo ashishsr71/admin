@@ -1,9 +1,11 @@
 import { User, columns } from "./columns";
 import { DataTable } from "./data-table";
 
+export const dynamic = "force-dynamic";
+
 const getData = async (): Promise<User[]> => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://127.0.0.1:${process.env.PORT || 3001}`);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://127.0.0.1:${process.env.PORT || 3000}`);
     const res = await fetch(`${baseUrl}/api/users`, { cache: "no-store", next: { revalidate: 0 } });
     if (!res.ok) throw new Error("Failed to fetch users");
     return await res.json();

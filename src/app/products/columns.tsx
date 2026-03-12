@@ -126,7 +126,7 @@ const ProductActionCell = ({ product }: { product: Product }) => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <Link href={`/products/${product.id}`}>View customer</Link>
+          <Link href={`/products/${product.id}`}>View product</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDelete} className="text-red-500">
           Delete product
