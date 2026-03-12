@@ -53,11 +53,23 @@ export const columns: ColumnDef<Product>[] = [
     header: "Image",
     cell: ({ row }) => {
       const product = row.original;
+      
+      // Compute safe image fallback
+      let imgUrl = "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=800"; // default placeholder
+      if (product.images) {
+        if (product.colors && product.colors.length > 0 && product.images[product.colors[0]]) {
+           imgUrl = product.images[product.colors[0]];
+        } else {
+           const firstImg = Object.values(product.images)[0];
+           if (firstImg) imgUrl = firstImg;
+        }
+      }
+
       return (
         <div className="w-9 h-9 relative">
           <Image
-            src={product.images[product.colors[0]]}
-            alt={product.name}
+            src={imgUrl}
+            alt={product.name || "Product"}
             fill
             className="rounded-full object-cover"
           />

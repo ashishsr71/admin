@@ -63,7 +63,16 @@ export async function GET(req: Request) {
     await connectToDatabase();
     const products = await Product.find(query).sort(sortOption);
     
-    return NextResponse.json(products, { status: 200 });
+    // Map _id explicitly to match frontend type
+    const formattedProducts = products.map((p) => {
+      const doc = p.toObject ? p.toObject() : p;
+      return {
+        ...doc,
+        id: (doc._id || doc.id).toString(),
+      };
+    });
+    
+    return NextResponse.json(formattedProducts, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch products" },
