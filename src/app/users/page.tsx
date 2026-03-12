@@ -1,11 +1,16 @@
 import { User, columns } from "./columns";
 import { DataTable } from "./data-table";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 const getData = async (): Promise<User[]> => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://127.0.0.1:${process.env.PORT || 3000}`);
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const protocol = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+
     const res = await fetch(`${baseUrl}/api/users`, { cache: "no-store", next: { revalidate: 0 } });
     if (!res.ok) throw new Error("Failed to fetch users");
     return await res.json();
