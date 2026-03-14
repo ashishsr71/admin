@@ -25,6 +25,7 @@ export type Payment = {
   email: string;
   paymentMethod: "Card" | "COD";
   status: "pending" | "success" | "failed";
+  trackingStatus: "processing" | "shipped" | "out_for_delivery" | "delivered";
 };
 
 export const columns: ColumnDef<Payment>[] = [
@@ -97,6 +98,28 @@ export const columns: ColumnDef<Payment>[] = [
     },
   },
   {
+    accessorKey: "trackingStatus",
+    header: "Tracking",
+    cell: ({ row }) => {
+      const ts = row.getValue("trackingStatus") as string || "processing";
+      const formatted = ts.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+
+      return (
+        <div
+          className={cn(
+            `p-1 px-2 rounded-md w-max text-xs font-medium`,
+            ts === "delivered" && "bg-green-100 text-green-800",
+            ts === "out_for_delivery" && "bg-amber-100 text-amber-800",
+            ts === "shipped" && "bg-indigo-100 text-indigo-800",
+            ts === "processing" && "bg-gray-100 text-gray-800"
+          )}
+        >
+          {formatted}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "amount",
     header: () => <div className="text-right">Amount</div>,
     cell: ({ row }) => {
@@ -130,6 +153,21 @@ const PaymentActionCell = ({ payment }: { payment: Payment }) => {
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Error updating order status");
+    }
+  };
+
+  const handleUpdateTracking = async (newTrackingStatus: string) => {
+    try {
+      const res = await fetch(`/api/orders/${payment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingStatus: newTrackingStatus })
+      });
+      if (!res.ok) throw new Error("Failed to update tracking status");
+      toast.success(`Tracking updated to ${newTrackingStatus.replace(/_/g, ' ')}`);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Error updating tracking status");
     }
   };
 
@@ -172,6 +210,22 @@ const PaymentActionCell = ({ payment }: { payment: Payment }) => {
           </DropdownMenuItem>
         )}
         
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Tracking</DropdownMenuLabel>
+        {payment.trackingStatus !== "processing" && (
+          <DropdownMenuItem onClick={() => handleUpdateTracking("processing")}>Set Processing</DropdownMenuItem>
+        )}
+        {payment.trackingStatus !== "shipped" && (
+          <DropdownMenuItem onClick={() => handleUpdateTracking("shipped")}>Set Shipped</DropdownMenuItem>
+        )}
+        {payment.trackingStatus !== "out_for_delivery" && (
+          <DropdownMenuItem onClick={() => handleUpdateTracking("out_for_delivery")}>Set Out for Delivery</DropdownMenuItem>
+        )}
+        {payment.trackingStatus !== "delivered" && (
+          <DropdownMenuItem onClick={() => handleUpdateTracking("delivered")}>Set Delivered</DropdownMenuItem>
+        )}
+        
+        <DropdownMenuSeparator />
         <DropdownMenuItem>
           <Link href={`/users/${payment.userId}`}>View customer</Link>
         </DropdownMenuItem>

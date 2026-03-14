@@ -40,6 +40,7 @@ export async function PATCH(
     // Only update allowed fields (e.g. status)
     const updateData: any = {};
     if (body.status !== undefined) updateData.status = body.status;
+    if (body.trackingStatus !== undefined) updateData.trackingStatus = body.trackingStatus;
 
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
@@ -73,8 +74,26 @@ export async function PATCH(
       });
     }
 
+    // CREATE NOTIFICATION IF TRACKING STATUS CHANGED
+    if (body.trackingStatus && body.trackingStatus !== updatedOrder.trackingStatus) {
+      const shortId = updatedOrder._id.toString().slice(-8).toUpperCase();
+      let title = "Tracking Update";
+      let desc = `Your order #${shortId} status has changed to: ${body.trackingStatus}.`;
+
+      await Notification.create({
+        userId: updatedOrder.userId,
+        title,
+        desc,
+        read: false
+      });
+    }
+
     // Return the newly mutated state
-    const newOrderState = { ...updatedOrder.toObject(), status: body.status || updatedOrder.status };
+    const newOrderState = {
+      ...updatedOrder.toObject(),
+      status: body.status || updatedOrder.status,
+      trackingStatus: body.trackingStatus || updatedOrder.trackingStatus
+    };
 
     return NextResponse.json(newOrderState, { status: 200 });
   } catch (error: any) {
