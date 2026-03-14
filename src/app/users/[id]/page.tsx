@@ -183,6 +183,16 @@ const SingleUserPage = async ({ params }: { params: Promise<{ id: string }> }) =
                 <span className="font-bold">Role:</span>
                 <span>{data.user?.isAdmin ? "Admin" : "Customer"}</span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">Phone:</span>
+                <span>{data.user?.phone || "N/A"}</span>
+              </div>
+              <div className="flex flex-col gap-1 mt-2">
+                <span className="font-bold">Bio/Details:</span>
+                <span className="text-sm text-muted-foreground bg-background p-3 rounded-md border border-border">
+                  {data.user?.bio || "No details provided."}
+                </span>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
               Joined on {data.user?.createdAt ? format(new Date(data.user.createdAt), "yyyy.MM.dd") : "Unknown"}
