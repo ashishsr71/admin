@@ -222,6 +222,10 @@ const PaymentActionCell = ({ payment }: { payment: Payment }) => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         
+        <DropdownMenuItem>
+          <Link href={`/payments/${payment.id}`}>View order details</Link>
+        </DropdownMenuItem>
+        
         {payment.status === "pending" && (
           <DropdownMenuItem onClick={() => handleUpdateStatus("success")} className="text-emerald-600 font-medium">
             Mark as Success
