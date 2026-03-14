@@ -32,15 +32,24 @@ const getUserData = async (id: string) => {
     const protocol = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     
-    // Admin user fetching might vary, going via API users or using mongoose directly.
-    // Assuming backend endpoint exists for user or fallback to standard client API fetch.
-    const res = await fetch(`${baseUrl}/api/users/${id}/addresses`, { cache: "no-store", next: { revalidate: 0 } });
-    if (!res.ok) throw new Error("Failed to fetch user addresses");
-    const addressData = await res.json();
-    return { addresses: addressData.addresses || [] };
+    const res = await fetch(`${baseUrl}/api/users/${id}`, { cache: "no-store", next: { revalidate: 0 } });
+    if (!res.ok) throw new Error("Failed to fetch user");
+    const user = await res.json();
+    
+    // Fallback if the user object doesn't already contain addresses from the API
+    let addresses = user.addresses || [];
+    if (!user.addresses) {
+      const addrRes = await fetch(`${baseUrl}/api/users/${id}/addresses`, { cache: "no-store", next: { revalidate: 0 } });
+      if (addrRes.ok) {
+        const addrData = await addrRes.json();
+        addresses = addrData.addresses || [];
+      }
+    }
+    
+    return { user, addresses };
   } catch (error) {
     console.error("Fetch API error", error);
-    return { addresses: [] };
+    return { user: null, addresses: [] };
   }
 };
 
@@ -61,7 +70,7 @@ const SingleUserPage = async ({ params }: { params: Promise<{ id: string }> }) =
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>John Doe</BreadcrumbPage>
+            <BreadcrumbPage>{data.user?.name || "User Details"}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -135,17 +144,13 @@ const SingleUserPage = async ({ params }: { params: Promise<{ id: string }> }) =
           {/* USER CARD CONTAINER */}
           <div className="bg-primary-foreground p-4 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
-              <Avatar className="size-12">
-                <AvatarImage src="https://avatars.githubusercontent.com/u/1486366" />
-                <AvatarFallback>JD</AvatarFallback>
+              <Avatar className="size-12 bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold text-xl">
+                {data.user?.name?.charAt(0).toUpperCase() || "U"}
               </Avatar>
-              <h1 className="text-xl font-semibold">John Doe</h1>
+              <h1 className="text-xl font-semibold">{data.user?.name || "Unknown User"}</h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vel
-              voluptas distinctio ab ipsa commodi fugiat labore quos veritatis
-              cum corrupti sed repudiandae ipsum, harum recusandae ratione ipsam
-              in, quis quia.
+              User ID: {id}
             </p>
           </div>
           {/* INFORMATION CONTAINER */}
@@ -164,31 +169,23 @@ const SingleUserPage = async ({ params }: { params: Promise<{ id: string }> }) =
                 <p className="text-sm text-muted-foreground">
                   Profile completion
                 </p>
-                <Progress value={66} />
+                <Progress value={data.addresses.length > 0 ? 100 : 70} />
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold">Full name:</span>
-                <span>John Doe</span>
+                <span>{data.user?.name || "N/A"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold">Email:</span>
-                <span>john.doe@gmail.com</span>
+                <span>{data.user?.email || "N/A"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-bold">Phone:</span>
-                <span>+1 234 5678</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold">Address:</span>
-                <span>123 Main St</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold">City:</span>
-                <span>New York</span>
+                <span className="font-bold">Role:</span>
+                <span>{data.user?.isAdmin ? "Admin" : "Customer"}</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              Joined on 2025.01.01
+              Joined on {data.user?.createdAt ? format(new Date(data.user.createdAt), "yyyy.MM.dd") : "Unknown"}
             </p>
           </div>
         </div>
