@@ -26,9 +26,29 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    phone: {
+      type: String,
+      maxlength: 20,
+    },
+    bio: {
+      type: String,
+      maxlength: 500,
+    },
+    resetPasswordOtp: String,
+    resetPasswordExpires: Date,
+    lastOtpRequestedAt: Date,
+    addresses: [
+      {
+        street: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: String,
+        isDefault: { type: Boolean, default: false },
+      },
+    ],
   },
   { timestamps: true }
 );
 
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
-export default User;
+export default mongoose.models.User || mongoose.model("User", UserSchema);

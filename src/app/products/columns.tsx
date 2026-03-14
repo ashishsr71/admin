@@ -137,7 +137,7 @@ const ProductActionCell = ({ product }: { product: Product }) => {
           Copy product ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href={`/products/${product.id}`}>View product</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDelete} className="text-red-500">

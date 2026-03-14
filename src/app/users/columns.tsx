@@ -137,7 +137,7 @@ const UserActionCell = ({ user }: { user: User }) => {
           Copy user ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href={`/users/${user.id}`}>View customer</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDelete} className="text-red-500">
