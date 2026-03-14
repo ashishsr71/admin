@@ -25,6 +25,13 @@ export type Payment = {
   email: string;
   paymentMethod: "Card" | "COD";
   status: "pending" | "success" | "failed";
+  shippingAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   trackingStatus: "processing" | "shipped" | "out_for_delivery" | "delivered";
 };
 
@@ -93,6 +100,22 @@ export const columns: ColumnDef<Payment>[] = [
           )}
         >
           {status as string}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "shippingAddress",
+    header: "Shipping Address",
+    cell: ({ row }) => {
+      const addr = row.getValue("shippingAddress") as Payment["shippingAddress"];
+      if (!addr) {
+        return <div className="text-xs text-muted-foreground w-max">N/A</div>;
+      }
+      return (
+        <div className="flex flex-col text-xs max-w-[200px] truncate">
+          <span className="font-medium">{addr.street}</span>
+          <span className="text-muted-foreground">{addr.city}, {addr.state} {addr.zipCode}</span>
         </div>
       );
     },

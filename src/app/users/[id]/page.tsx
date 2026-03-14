@@ -21,7 +21,33 @@ import EditUser from "@/components/EditUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AppLineChart from "@/components/AppLineChart";
 
-const SingleUserPage = () => {
+import { headers } from "next/headers";
+import { format } from "date-fns";
+import { MapPin } from "lucide-react";
+
+const getUserData = async (id: string) => {
+  try {
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const protocol = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+    
+    // Admin user fetching might vary, going via API users or using mongoose directly.
+    // Assuming backend endpoint exists for user or fallback to standard client API fetch.
+    const res = await fetch(`${baseUrl}/api/users/${id}/addresses`, { cache: "no-store", next: { revalidate: 0 } });
+    if (!res.ok) throw new Error("Failed to fetch user addresses");
+    const addressData = await res.json();
+    return { addresses: addressData.addresses || [] };
+  } catch (error) {
+    console.error("Fetch API error", error);
+    return { addresses: [] };
+  }
+};
+
+const SingleUserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
+  const data = await getUserData(id);
+
   return (
     <div className="">
       <Breadcrumb>
@@ -169,6 +195,28 @@ const SingleUserPage = () => {
         {/* RIGHT */}
         <div className="w-full xl:w-2/3 space-y-6">
           
+          {/* ADDRESSES CONTAINER */}
+          <div className="bg-primary-foreground p-4 rounded-lg">
+            <h1 className="text-xl font-semibold mb-4">Saved Addresses</h1>
+            {data.addresses.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No addresses saved.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.addresses.map((addr: any, idx: number) => (
+                  <div key={idx} className="border border-border p-4 rounded-lg flex flex-col gap-1">
+                    <div className="flex items-center gap-2 mb-2 text-cyan-700">
+                      <MapPin className="w-4 h-4" />
+                      <span className="font-semibold text-sm font-mono">ADDRESS {idx + 1}</span>
+                    </div>
+                    <p className="font-medium text-foreground">{addr.street}</p>
+                    <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} {addr.zipCode}</p>
+                    <p className="text-sm text-muted-foreground">{addr.country}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* CHART CONTAINER */}
           <div className="bg-primary-foreground p-4 rounded-lg">
             <h1 className="text-xl font-semibold">User Activity</h1>
